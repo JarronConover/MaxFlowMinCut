@@ -30,6 +30,8 @@ public class Graph {
 
     /**
      * Algorithm to find max-flow in a network
+     * Display of the augmenting paths and edges
+     * total flow displayed
      */
     public int findMaxFlow(int s, int t, boolean report) {
         // TODO:
@@ -46,6 +48,7 @@ public class Graph {
 
     /**
      * Algorithm to find the min-cut edges in a network
+     * Display of which edges to cut
      */
     public void findMinCut(int s) {
         // TODO:

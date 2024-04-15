@@ -58,3 +58,39 @@ public class Assignment7Driver {
         return null;
     }
 }
+
+/**
+ * Compute max flow and min cut for starting and ending vertices
+ * Graph and GraphNode use adjacency list (may need to add to them)
+ * Finish Graph; You may modify code or add methods
+
+ * Must use Edmonds Karp algorithm to determine the max flow
+    * as describe in the assignment
+ * Bread First Search for computing of the augmenting path
+    * as described in the assignment
+ * Min Cut as described in the assignment
+
+ * Demands.txt are as follows:
+    * first line: (6) Number of vertices
+    * Rest of lines: (0 1 3) vertex numbers of edge and then edge weight
+    * Flow goes from first vertex to second vertex
+ * Code should handle vertices in any order
+
+ *Output:
+    *  -- Max Flow: txtFileName.txt --
+     * Display each augmenting path
+        * Flow (amount of flow along that augmenting path): vertex numbers of the path
+        * Edmonds Karp finds shortest paths first so aug paths only grow in size
+     * Display all edges that carry flow  (items)
+        * Edge(x, y) transports z items (z being amount of flow on edge)
+        * Total Flow: Total
+        * An augmenting path can "push" flow backwards. *see notes
+
+    *  -- Min Cut: txtFileName.txt --
+        *  Min Cut Edge: (x, y) (the cut edges needing to be cut)
+
+ *  May want to add a residual 2D array to Graph.java to track flow forward and backward
+ *  Write a method to display the residual graph to help you debug your code
+ *  Java's LinkedList class supports the Queue interface; this is much better than using an ArrayList as a queue.
+    *  You can create it like this: Queue<Integer> q = new LinkedList<>();
+ */
