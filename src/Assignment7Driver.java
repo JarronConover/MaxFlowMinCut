@@ -61,7 +61,7 @@ public class Assignment7Driver {
 
 /**
  * Compute max flow and min cut for starting and ending vertices
- * Graph and GraphNode use adjacency list (may need to add to them)
+ * Graph and GraphNode use adjacency list (may need to add to Graph NOT GraphNode)
  * Finish Graph; You may modify code or add methods
 
  * Must use Edmonds Karp algorithm to determine the max flow
