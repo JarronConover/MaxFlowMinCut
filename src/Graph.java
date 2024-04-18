@@ -35,26 +35,72 @@ public class Graph {
      */
     public int findMaxFlow(int s, int t, boolean report) {
         // TODO:
+        System.out.println("-- Max Flow: " + this.name + " --");
+
         //Edmonds Karp
         int totalFlow = 0;
 
-
+        GraphNode.EdgeInfo forwardEdge = null;
+        GraphNode.EdgeInfo backwardEdge = null;
 
         while (hasAugmentingPath(s, t)){
             int availableFlow = 2147483646;
-            for (int v = t; v > s; v --){
-                availableFlow = Math.min(availableFlow, vertices[v].successor.get(0).capacity);
-                //update residual graph by
-                // // subtract available flow at vertex v in direction of s to t
-                // // add available flow at vertex v in direction of t to s
-                totalFlow += availableFlow;
 
+            ArrayList<Integer> augmentedPath = new ArrayList<>();
+
+            for (int v = t; v > s; v --){
+
+                //Error Handling:
+                //If v = s or v has no parent solve for w
+
+                int w = vertices[v].parent;
+
+                for (GraphNode.EdgeInfo vertex : vertices[v].successor){
+                    if (vertex.to == w){
+                        backwardEdge = vertex;
+                    }
+                }
+
+                for (GraphNode.EdgeInfo vertex : vertices[w].successor){
+                    if (vertex.to == v){
+                        forwardEdge = vertex;
+                    }
+                }
+
+                assert forwardEdge != null;
+                assert backwardEdge != null;
+
+                int residual = forwardEdge.capacity;
+
+                availableFlow = Math.min(availableFlow, residual);
+
+                backwardEdge.capacity += availableFlow;
+                forwardEdge.capacity -= availableFlow;
+
+                //create an array of points of the augmented path
+                augmentedPath.add(v);
             }
+
+            totalFlow += availableFlow;
+
+            //Display each augmenting path
+            Collections.reverse(augmentedPath);
+            StringBuilder flow = new StringBuilder("Flow " + availableFlow + ": ");
+
+            for (int vertex : augmentedPath){
+                flow.append(vertex).append(" ");
+            }
+
+            System.out.println(flow + "\n");
         }
 
+        //Print out edges and amount transported preferably with a single function
+        printGraph();
 
         return totalFlow;
     }
+
+
 
 
 
@@ -69,7 +115,6 @@ public class Graph {
             vertex.parent= -1;
         }
 
-        //add s to queue...
         Queue<Integer> queue = new LinkedList<>();
         queue.add(s);
         while (!queue.isEmpty() && vertices[t].parent == -1){
@@ -78,11 +123,10 @@ public class Graph {
                 int w = successor.to; //could need to be from
 
                 // TODO: if there is residual capacity from v to w
-                // and not already part of the augmenting path
-                // and not s
 
-                if (successor.capacity>0 && !queue.contains(w) && w != s){
+                if (successor.capacity > 0 && !vertices[w].visited && w != s){
                     vertices[w].parent = v;
+                    vertices[w].visited = true;
                     queue.add(w);
                 }
             }
@@ -92,22 +136,55 @@ public class Graph {
     }
 
     /**
+     * Algorithm to print graph
+     */
+    private void printGraph(){
+        for (GraphNode vertex : vertices){
+            for (GraphNode.EdgeInfo edge : vertex.successor){
+                if (edge.capacity > 0){
+                    System.out.println("Edge(" + edge.from + ", " + edge.to + ") transports " + edge.capacity + " items");
+                }
+            }
+        }
+    }
+
+    /**
      * Algorithm to find the min-cut edges in a network
-     * Display of which edges to cut
      */
     public void findMinCut(int s) {
-        // TODO:
-        //Based on the max flow algorithm, compute the final residual graph
+        System.out.println("\n-- Min Cut: " + this.name + " --");
 
+        ArrayList<Integer> R = new ArrayList<>();
+        R.add(s);
 
+        //Add all vertices that are reachable from s to ArrayList R
+        Queue<Integer> queue = new LinkedList<>();
+        queue.add(s);
+        while (!queue.isEmpty()){
+            int v = queue.remove();
+            for (GraphNode.EdgeInfo edge : vertices[v].successor){
+                int w = edge.to;
+                if (edge.capacity > 0 && queue.contains(w)){
+                    queue.add(w);
+                    R.add(w);
+                }
+            }
 
-        //Find the set of vertices that are reachable from the source vertex
-        //  // in the residual graph; the set R includes s.  Call those vertices R.
+        }
 
-
-
-        //All edges from a vertex in R to a vertex not in R are the minimum cut edges
-
+        //Find all edges from a vertex in R to a vertex not in are and add to minCutEdges
+        ArrayList<GraphNode.EdgeInfo> minCutEdges = new ArrayList<>();
+        for (int vertex : R){
+            for (GraphNode.EdgeInfo edge : vertices[vertex].successor){
+                if (!R.contains(edge.to)){
+                    minCutEdges.add(edge);
+                }
+            }
+        }
+        for (GraphNode.EdgeInfo edge : minCutEdges){
+            System.out.println("Min Cut Edge: (" + edge.from + ", " + edge.to + ")");
+        }
+        System.out.println();
     }
 
     public String toString() {
