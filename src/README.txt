@@ -21,6 +21,16 @@ algorithm.  Be as specific as you can.
         return true;
     }
 
-Initial hunch: describe that it creates a start and end point
+Response:
 
+The purpose of the line 26 of the Graph.java file is to create a residual backwards flow edge for each and every edge
+added to the graph. This line of code creates an edge from the destination of the new edge to the source of the new edge
+with a capacity of 0 as there is no possible flow at this edge until there is residual flow added to it from flow used
+by the original (forward) edge of source to destination.
 
+Line 26 is necessary because our Edmonds Karp algorithm can make *mistakes*. In the scenario that we use a path that is
+later discovered to be suboptimal we must have the residual backwards flow edge created by line 26 to push or redirect
+flow back threw the graph to create a more optimal route.
+
+This line of code helps with the correctness of the graph by allowing for changes to the graph once paths have already
+been determined. Thus, we achieve the most optimal path regardless of what path we choose to start with.

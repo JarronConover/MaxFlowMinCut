@@ -12,7 +12,6 @@ public class Graph {
             vertices[vertex] = new GraphNode(vertex);
         }
     }
-
     public boolean addEdge(int source, int destination, int capacity) {
         // A little bit of validation
         if (source < 0 || source >= vertices.length) return false;
@@ -34,118 +33,70 @@ public class Graph {
      * total flow displayed
      */
     public int findMaxFlow(int s, int t, boolean report) {
-        // TODO:
         System.out.println("-- Max Flow: " + this.name + " --");
 
-        //Edmonds Karp
         int totalFlow = 0;
-
-        GraphNode.EdgeInfo forwardEdge = null;
-        GraphNode.EdgeInfo backwardEdge = null;
+        ArrayList<ArrayList<Integer>> usedEdges = new ArrayList<>();
 
         while (hasAugmentingPath(s, t)){
-            int availableFlow = 2147483646;
+            int availableFlow = Integer.MAX_VALUE;
 
             ArrayList<Integer> augmentedPath = new ArrayList<>();
+            augmentedPath.add(t);
+            int v = t;
 
-            for (int v = t; v > s; v --){
-
-                //Error Handling:
-                //If v = s or v has no parent solve for w
-
+            while (v != s) {
                 int w = vertices[v].parent;
-
-                for (GraphNode.EdgeInfo vertex : vertices[v].successor){
-                    if (vertex.to == w){
-                        backwardEdge = vertex;
-                    }
-                }
-
-                for (GraphNode.EdgeInfo vertex : vertices[w].successor){
-                    if (vertex.to == v){
-                        forwardEdge = vertex;
-                    }
-                }
-
-                assert forwardEdge != null;
-                assert backwardEdge != null;
-
-                int residual = forwardEdge.capacity;
-
-                availableFlow = Math.min(availableFlow, residual);
-
-                backwardEdge.capacity += availableFlow;
-                forwardEdge.capacity -= availableFlow;
-
-                //create an array of points of the augmented path
-                augmentedPath.add(v);
+                augmentedPath.add(w);
+                availableFlow = Math.min(getEdge(w, v).capacity, availableFlow);
+                v = w;
             }
+
+            for (int i = 0, j = 1; j < augmentedPath.size(); i++, j++) {
+                v = augmentedPath.get(i);
+                int w = augmentedPath.get(j);
+
+                getEdge(w, v).capacity -= availableFlow;
+                getEdge(v, w).capacity += availableFlow;
+              }
 
             totalFlow += availableFlow;
 
-            //Display each augmenting path
-            Collections.reverse(augmentedPath);
+            //Display each augmenting path and add paths to usedEdges
             StringBuilder flow = new StringBuilder("Flow " + availableFlow + ": ");
-
+            Collections.reverse(augmentedPath);
+            usedEdges.add(augmentedPath);
             for (int vertex : augmentedPath){
                 flow.append(vertex).append(" ");
             }
-
-            System.out.println(flow + "\n");
+            System.out.println(flow);
         }
-
-        //Print out edges and amount transported preferably with a single function
-        printGraph();
-
+        printGraph(usedEdges);
         return totalFlow;
     }
-
-
-
-
-
 
     /**
      * Algorithm to find an augmenting path in a network
      */
     private boolean hasAugmentingPath(int s, int t) {
-        // TODO:
-        //breadth-first Search IDK where it goes with Max Flow or here
         for (GraphNode vertex : vertices){
             vertex.parent= -1;
+            vertex.visited = false;
         }
-
         Queue<Integer> queue = new LinkedList<>();
         queue.add(s);
         while (!queue.isEmpty() && vertices[t].parent == -1){
             int v = queue.remove();
-            for (GraphNode.EdgeInfo successor : vertices[v].successor){
-                int w = successor.to; //could need to be from
-
-                // TODO: if there is residual capacity from v to w
-
-                if (successor.capacity > 0 && !vertices[w].visited && w != s){
+            vertices[v].visited = true;
+            for (GraphNode.EdgeInfo edge : vertices[v].successor){
+                int w = edge.to;
+                if (edge.capacity > 0 && !vertices[w].visited && w != s){
                     vertices[w].parent = v;
-                    vertices[w].visited = true;
                     queue.add(w);
                 }
             }
         }
-
         return (vertices[t].parent != -1);
-    }
-
-    /**
-     * Algorithm to print graph
-     */
-    private void printGraph(){
-        for (GraphNode vertex : vertices){
-            for (GraphNode.EdgeInfo edge : vertex.successor){
-                if (edge.capacity > 0){
-                    System.out.println("Edge(" + edge.from + ", " + edge.to + ") transports " + edge.capacity + " items");
-                }
-            }
-        }
     }
 
     /**
@@ -169,10 +120,9 @@ public class Graph {
                     R.add(w);
                 }
             }
-
         }
 
-        //Find all edges from a vertex in R to a vertex not in are and add to minCutEdges
+        //Find all edges from a vertex in R to a vertex not in R and add to minCutEdges
         ArrayList<GraphNode.EdgeInfo> minCutEdges = new ArrayList<>();
         for (int vertex : R){
             for (GraphNode.EdgeInfo edge : vertices[vertex].successor){
@@ -187,6 +137,37 @@ public class Graph {
         System.out.println();
     }
 
+    /**
+     * Algorithm to find an edge given a from and to vertices
+     */
+    private GraphNode.EdgeInfo getEdge (int from, int to){
+        GraphNode.EdgeInfo edge = null;
+        for (GraphNode.EdgeInfo element : vertices[from].successor) {
+            if (element.to == to) {
+                edge = element;
+            }
+        }
+        return edge;
+    }
+
+    /**
+     * Algorithm to print the graph given the paths used
+     */
+    private void printGraph(ArrayList<ArrayList<Integer>> usedGraph){
+        String graph = "";
+        ArrayList<GraphNode.EdgeInfo> list = new ArrayList<>();
+        for (ArrayList<Integer> path : usedGraph){
+            for (int i = 0, j = 1; j < path.size(); i++, j++){
+                GraphNode.EdgeInfo edge = getEdge(path.get(j), path.get(i));
+                if (!list.contains(edge)){
+                    graph += "\nEdge(" + edge.to + ", " + edge.from + ") transports " + edge.capacity + " items";
+                    list.add(edge);
+                }
+            }
+        }
+        System.out.println(graph);
+    }
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
@@ -195,5 +176,26 @@ public class Graph {
             sb.append((vertex.toString()));
         }
         return sb.toString();
+    }
+
+    /**
+     * Algorithm to create residual 2D graph as a matrix
+     */
+    private LinkedList<LinkedList<Integer>> residualGraph(){
+        LinkedList<LinkedList<Integer>> residual2D = new LinkedList<>();
+        for (GraphNode vertex : vertices){
+            LinkedList<Integer> list = new LinkedList<>();
+
+            for (int i = 0; i < vertices.length; i++){
+                list.add(0);
+                for (GraphNode.EdgeInfo edge : vertex.successor){
+                    if (edge.to == i){
+                        list.set(i, edge.capacity);
+                    }
+                }
+            }
+            residual2D.add(list);
+        }
+        return residual2D;
     }
 }
