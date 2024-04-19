@@ -105,6 +105,12 @@ public class Graph {
     public void findMinCut(int s) {
         System.out.println("\n-- Min Cut: " + this.name + " --");
 
+        //Set up final residual graph to use
+        for (GraphNode vertex : vertices){
+            vertex.visited = false;
+        }
+        vertices[s].visited=true;
+
         ArrayList<Integer> R = new ArrayList<>();
         R.add(s);
 
@@ -115,8 +121,9 @@ public class Graph {
             int v = queue.remove();
             for (GraphNode.EdgeInfo edge : vertices[v].successor){
                 int w = edge.to;
-                if (edge.capacity > 0 && queue.contains(w)){
+                if (edge.capacity > 0 && !vertices[w].visited){
                     queue.add(w);
+                    vertices[w].visited = true;
                     R.add(w);
                 }
             }
